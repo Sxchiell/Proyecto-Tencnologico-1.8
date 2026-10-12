@@ -1,0 +1,595 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>PCReserve – Préstamo de proyectores, computadoras y salones</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Space+Grotesk:wght@600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../css/proyecto.css" />
+  </head>
+  <body>
+    <div class="warn" id="cfgWarn">
+      ⚠️ Falta conectar Firebase. Abre <b>js/config.js</b>, pega los datos de tu proyecto y
+      recarga la página (guía en <b>FIREBASE-SETUP.md</b>).
+    </div>
+    <header>
+      <a class="logo" href="#top">
+        <!-- ESPACIO PARA EL LOGO: guarda tu imagen como img/logo.png (se reemplaza sola) -->
+        <span class="brand-mark"
+          ><img src="../img/logo.png" alt="Logo de la empresa"
+            onerror="this.onerror=null;this.src='../img/logo-placeholder.svg'"
+        /></span>
+        PC<b>Reserve</b></a
+      >
+      <nav>
+        <a href="#disponibilidad">Disponibilidad</a><a href="#como">Cómo funciona</a
+        ><a href="#problema">Problema</a><a href="#objetivos">Objetivos</a
+        ><a href="#requisitos">Requisitos</a><a href="#diseno">Diseño</a
+        ><a href="#tecnologias">Tecnologías</a><a href="#resultados">Resultados</a
+        ><a href="#equipo">Equipo</a>
+      </nav>
+      <span id="auth"></span>
+    </header>
+
+    <div class="hero" id="top">
+      <div>
+        <span class="chip"
+          ><span class="dot lib"></span> Disponibilidad en tiempo real · Instituto Nacional San
+          Luis</span
+        >
+        <h1>Reserva <span class="word" id="word">proyectores</span><br />sin hacer fila.</h1>
+        <p>
+          Mira qué salones, proyectores y laptops están
+          <b style="color: var(--lib)">libres</b> u <b style="color: var(--ocu)">ocupados</b> ahora
+          mismo, y resérvalos en menos de un minuto. Sin cruces de horario.
+        </p>
+        <div class="cta">
+          <a class="btn" href="#disponibilidad">Ver disponibilidad ↓</a
+          ><a class="btn ghost" href="#como">¿Cómo funciona?</a>
+        </div>
+        <div class="live">
+          <div class="pill"><span class="dot lib"></span><b id="cLib">0</b> libres</div>
+          <div class="pill"><span class="dot ocu"></span><b id="cOcu">0</b> ocupados</div>
+          <div class="pill"><span class="dot man"></span><b id="cMan">0</b> en mantenimiento</div>
+        </div>
+      </div>
+      <div class="stage" aria-hidden="true">
+        <div class="ring"></div>
+        <div class="fc a">
+          <span class="i">🏫</span>
+          <div><em>LIBRE</em><b>Salón de Informática</b><small>Disponible ahora</small></div>
+        </div>
+        <div class="fc b">
+          <span class="i">📽️</span>
+          <div><em>OCUPADO</em><b>Proyector #1</b><small>Libre en 1 h</small></div>
+        </div>
+        <div class="fc c">
+          <span class="i">💻</span>
+          <div><em>MANTENIMIENTO</em><b>Laptop #2</b><small>Revisión técnica</small></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="marq" aria-hidden="true"><div class="track" id="track"></div></div>
+
+    <section id="disponibilidad">
+      <h2 class="rv">Tablero de disponibilidad</h2>
+      <p class="sub rv">
+        Actualizado automáticamente. Elige un recurso libre y selecciona tu bloque horario.
+      </p>
+      <div class="card" id="adminBox" style="display: none; margin-bottom: 22px">
+        <span class="tag">Solo administrador</span>
+        <h3>➕ Agregar recurso</h3>
+        <div class="row">
+          <div>
+            <label>Tipo</label>
+            <select id="aType">
+              <option value="salon">🏫 Salón</option>
+              <option value="proyector">📽️ Proyector</option>
+              <option value="laptop">💻 Laptop</option>
+            </select>
+          </div>
+          <div>
+            <label>Nombre</label><input id="aName" maxlength="60" placeholder="Ej: Proyector #4" />
+          </div>
+          <div>
+            <label>Ubicación</label
+            ><input id="aLoc" maxlength="60" placeholder="Ej: Edificio B · 1° nivel" />
+          </div>
+          <div>
+            <label>Especificaciones</label
+            ><input id="aSpec" maxlength="80" placeholder="Ej: HDMI · 3500 lúmenes" />
+          </div>
+          <div><button id="aBtn">Agregar</button></div>
+        </div>
+      </div>
+      <div class="filters rv" id="filters">
+        <button class="fbtn on" data-t="all">Todos</button
+        ><button class="fbtn" data-t="salon">🏫 Salones</button
+        ><button class="fbtn" data-t="proyector">📽️ Proyectores</button
+        ><button class="fbtn" data-t="laptop">💻 Laptops</button>
+        <span class="sp"></span>
+        <select id="stFilter" style="width: auto">
+          <option value="all">Cualquier estado</option>
+          <option value="lib">Solo libres</option>
+          <option value="ocu">Solo ocupados</option>
+          <option value="man">En mantenimiento</option>
+        </select>
+        <span class="today" id="clock"></span>
+      </div>
+      <div class="rg" id="rg"></div>
+    </section>
+
+    <section id="panel">
+      <h2>Mis reservas</h2>
+      <p class="sub" id="welcome"></p>
+      <div class="wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Recurso</th>
+              <th>Fecha</th>
+              <th>Horario</th>
+              <th>Reservado por</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="rList"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="como">
+      <h2 class="rv">Reservar es fácil</h2>
+      <p class="sub rv">Tres pasos y el recurso es tuyo.</p>
+      <div class="grid steps">
+        <div class="card step rv">
+          <h3>Inicia sesión</h3>
+          <p>
+            Entra como estudiante, docente o administrador. Cada rol tiene sus propias reglas de
+            préstamo.
+          </p>
+        </div>
+        <div class="card step rv">
+          <h3>Elige y mira el horario</h3>
+          <p>
+            Los bloques en rojo están ocupados, los verdes libres. El sistema no te deja chocar con
+            otra reserva.
+          </p>
+        </div>
+        <div class="card step rv">
+          <h3>Confirma y listo</h3>
+          <p>Tu reserva queda registrada, visible para todos y puedes cancelarla cuando quieras.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="problema">
+      <h2 class="rv">¿Qué problema resolvemos?</h2>
+      <p class="sub rv">
+        La gestión manual de salones de cómputo, laboratorios y equipos (proyectores, laptops y
+        computadoras) mediante bitácoras en papel, hojas de cálculo aisladas o comunicación verbal
+        genera múltiples deficiencias.
+      </p>
+      <div class="grid">
+        <div class="card rv">
+          <span class="ic">⏱️</span>
+          <h3>Cruces de horarios</h3>
+          <p>
+            Docentes y estudiantes reservan el mismo espacio o equipo a la misma hora, causando
+            interrupciones y pérdida de tiempo lectivo.
+          </p>
+        </div>
+        <div class="card rv">
+          <span class="ic">👁️</span>
+          <h3>Equipos desaprovechados</h3>
+          <p>
+            Sin visibilidad centralizada no se conoce la disponibilidad en tiempo real y hay que
+            desplazarse físicamente.
+          </p>
+        </div>
+        <div class="card rv">
+          <span class="ic">📊</span>
+          <h3>Sin trazabilidad</h3>
+          <p>
+            Los administradores carecen de métricas de uso, fallas y necesidades de mantenimiento
+            preventivo o correctivo.
+          </p>
+        </div>
+        <div class="card rv">
+          <span class="ic">📄</span>
+          <h3>Ineficiencia administrativa</h3>
+          <p>
+            Pérdida de registros físicos, reservas duplicadas y sobrecarga del personal de soporte
+            técnico.
+          </p>
+        </div>
+      </div>
+      <p class="rv" style="margin-top: 20px">
+        <b>Síntesis:</b> la ausencia de un sistema automatizado resta tiempo efectivo de clase y
+        genera fricción en el préstamo de recursos tecnológicos clave.
+      </p>
+    </section>
+
+    <section id="objetivos">
+      <h2 class="rv">Lo que queremos lograr</h2>
+      <p class="sub rv">
+        <b>Objetivo general:</b> desarrollar e implementar PCReserve, una aplicación web intuitiva y
+        accesible para gestionar reservas de laboratorios, salones y recursos tecnológicos, que
+        optimice la asignación de horarios, garantice la trazabilidad de uso y mejore la
+        accesibilidad para docentes y estudiantes.
+      </p>
+      <div class="grid">
+        <div class="card rv">
+          <span class="tag">Específico 1</span>
+          <h3>Módulo de reservas automatizado</h3>
+          <p>
+            Gestión interactiva en tiempo real que previene el solapamiento de horarios y valida las
+            reglas de asignación según el rol (docente o estudiante).
+          </p>
+        </div>
+        <div class="card rv">
+          <span class="tag">Específico 2</span>
+          <h3>Control de inventario y reportes</h3>
+          <p>
+            Panel de administración para controlar estado, mantenimiento y características de
+            equipos, con reportes estadísticos de uso por laboratorio y recurso.
+          </p>
+        </div>
+      </div>
+      <h2 class="rv" style="margin-top: 36px">¿Por qué es importante?</h2>
+      <div class="grid" style="margin-top: 14px">
+        <div class="card rv">
+          <span class="tag">Operativa</span>
+          <h3>Profesores y alumnos</h3>
+          <p>
+            Solicitudes automatizadas y calendario visible al instante: menos espera y menos
+            desplazamientos.
+          </p>
+        </div>
+        <div class="card rv">
+          <span class="tag">Tecno-administrativa</span>
+          <h3>Equipo de soporte</h3>
+          <p>
+            Control centralizado de la vida útil de los recursos, mantenimiento preventivo y
+            detección rápida de equipos defectuosos.
+          </p>
+        </div>
+        <div class="card rv">
+          <span class="tag">Institucional</span>
+          <h3>La institución</h3>
+          <p>
+            Elimina la papelería, impulsa la transformación digital y sienta bases para una gestión
+            sostenible.
+          </p>
+        </div>
+      </div>
+      <h2 class="rv" style="margin-top: 36px">Términos clave, explicados fácil</h2>
+      <div class="grid" style="margin-top: 14px">
+        <div class="card rv">
+          <h3>Página web moderna</h3>
+          <p>
+            Arquitectura cliente-servidor y patrón MVC: presentación, lógica de negocio y base de
+            datos separadas.
+          </p>
+        </div>
+        <div class="card rv">
+          <h3>Llaves de acceso seguras</h3>
+          <p>
+            Autenticación JWT: tokens encriptados sin estado que validan identidad y permisos en
+            cada petición.
+          </p>
+        </div>
+        <div class="card rv">
+          <h3>Base de datos ordenada</h3>
+          <p>
+            Base relacional con claves primarias y foráneas que asegura la integridad de reservas,
+            usuarios y equipos.
+          </p>
+        </div>
+        <div class="card rv">
+          <h3>Desarrollo por pasos</h3>
+          <p>Metodología ágil Scrum: iteraciones cortas con entregables funcionales validados.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="requisitos">
+      <h2 class="rv">¿Qué hace y cómo funciona?</h2>
+      <h3 class="rv" style="margin-top: 20px">Requisitos funcionales</h3>
+      <div class="grid">
+        <div class="card rv">
+          <span class="tag">RF-01</span>
+          <h3>Autenticación y acceso</h3>
+          <p>Registro e inicio de sesión seguro con roles: Administrador, Docente y Estudiante.</p>
+        </div>
+        <div class="card rv">
+          <span class="tag">RF-02</span>
+          <h3>Consulta de disponibilidad</h3>
+          <p>Salones, proyectores y laptops por bloques horarios.</p>
+        </div>
+        <div class="card rv">
+          <span class="tag">RF-03</span>
+          <h3>Gestión de reservas</h3>
+          <p>Crear, modificar y cancelar reservas con verificación automática sin solapamiento.</p>
+        </div>
+        <div class="card rv">
+          <span class="tag">RF-04</span>
+          <h3>Administración de inventario</h3>
+          <p>
+            Registrar, editar y categorizar equipos (activos, en mantenimiento, fuera de servicio) y
+            espacios.
+          </p>
+        </div>
+        <div class="card rv">
+          <span class="tag">RF-05</span>
+          <h3>Reportes y métricas</h3>
+          <p>Reportes tabulares y gráficos de porcentaje de ocupación y tasa de uso.</p>
+        </div>
+      </div>
+      <h3 class="rv" style="margin-top: 26px">Requisitos no funcionales</h3>
+      <div class="grid">
+        <div class="card rv">
+          <span class="tag">RNF-01</span>
+          <h3>Rendimiento</h3>
+          <p>Respuesta a reservas en menos de 2 segundos bajo carga estándar.</p>
+        </div>
+        <div class="card rv">
+          <span class="tag">RNF-02</span>
+          <h3>Seguridad</h3>
+          <p>Contraseñas con hashing bcrypt y protección contra OWASP Top 10.</p>
+        </div>
+        <div class="card rv">
+          <span class="tag">RNF-03</span>
+          <h3>Usabilidad</h3>
+          <p>Diseño responsive para móviles, tablets y escritorio.</p>
+        </div>
+        <div class="card rv">
+          <span class="tag">RNF-04</span>
+          <h3>Disponibilidad</h3>
+          <p>99.5% durante el ciclo lectivo.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="diseno">
+      <h2 class="rv">Estructura de la información</h2>
+      <p class="sub rv">Entidades de la base de datos relacional.</p>
+      <div class="wrap rv">
+        <table>
+          <tr>
+            <th>Tabla</th>
+            <th>Atributos principales</th>
+            <th>Claves</th>
+            <th>Descripción</th>
+          </tr>
+          <tr>
+            <td><b>Usuarios</b></td>
+            <td>id_usuario, nombre, email, password_hash, rol</td>
+            <td>PK: id_usuario</td>
+            <td>Usuarios y sus roles (Docente, Estudiante, Admin).</td>
+          </tr>
+          <tr>
+            <td><b>Recursos</b></td>
+            <td>id_recurso, tipo, codigo_inventario, estado, ubicacion</td>
+            <td>PK: id_recurso</td>
+            <td>Catálogo de espacios, computadoras y proyectores.</td>
+          </tr>
+          <tr>
+            <td><b>Reservas</b></td>
+            <td>id_reserva, id_usuario, id_recurso, fecha, hora_inicio, hora_fin, estado</td>
+            <td>PK: id_reserva · FK: id_usuario, id_recurso</td>
+            <td>Bloque horario reservado.</td>
+          </tr>
+          <tr>
+            <td><b>Mantenimiento</b></td>
+            <td>id_mantenimiento, id_recurso, fecha, descripcion, estado</td>
+            <td>PK: id_mantenimiento · FK: id_recurso</td>
+            <td>Histórico de fallas y revisiones.</td>
+          </tr>
+        </table>
+      </div>
+    </section>
+
+    <section id="tecnologias">
+      <h2 class="rv">Herramientas y pruebas</h2>
+      <div class="grid" style="margin-top: 14px">
+        <div class="card rv">
+          <span class="tag">Frontend</span>
+          <h3>HTML5, CSS3, React.js</h3>
+          <p>Tailwind CSS y JavaScript para una interfaz dinámica con actualización sin recarga.</p>
+        </div>
+        <div class="card rv">
+          <span class="tag">Backend</span>
+          <h3>Node.js + Express</h3>
+          <p>API RESTful con las reglas de negocio y validación de horarios.</p>
+        </div>
+        <div class="card rv">
+          <span class="tag">Base de datos</span>
+          <h3>PostgreSQL</h3>
+          <p>Transacciones ACID y consultas complejas por rango de fechas.</p>
+        </div>
+        <div class="card rv">
+          <span class="tag">Infraestructura</span>
+          <h3>Docker</h3>
+          <p>Contenedores y despliegue continuo en el entorno institucional.</p>
+        </div>
+      </div>
+      <div class="grid" style="margin-top: 16px">
+        <div class="card rv">
+          <span class="tag">Pruebas</span>
+          <h3>Unitarias</h3>
+          <p>Lógica de negocio y algoritmos de detección de colisión de horarios.</p>
+        </div>
+        <div class="card rv">
+          <span class="tag">Pruebas</span>
+          <h3>De integración</h3>
+          <p>Flujo completo entre cliente web, API y base de datos.</p>
+        </div>
+        <div class="card rv">
+          <span class="tag">Pruebas</span>
+          <h3>Aceptación (UAT)</h3>
+          <p>15 docentes y 30 estudiantes reservando simultáneamente desde móviles y escritorio.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="resultados">
+      <h2 class="rv">Resultados obtenidos</h2>
+      <p class="sub rv">
+        Fase piloto de cuatro semanas en el área de cómputo, comparada con el sistema manual
+        anterior.
+      </p>
+      <div class="grid" style="margin-bottom: 18px">
+        <div class="card stat rv">
+          <b data-count="1.5" data-pre="&lt;" data-suf=" min" data-dec="1">0</b>por reserva
+        </div>
+        <div class="card stat rv"><b data-count="0">0</b>solapamientos</div>
+        <div class="card stat rv"><b data-count="88" data-suf="%">0</b>ocupación</div>
+        <div class="card stat rv"><b data-count="94" data-suf="%">0</b>aprobación</div>
+      </div>
+      <div class="wrap rv">
+        <table>
+          <tr>
+            <th>Métrica</th>
+            <th>Proceso manual</th>
+            <th>Con PCReserve</th>
+          </tr>
+          <tr>
+            <td>Tiempo promedio por reserva</td>
+            <td class="bad">15 - 25 minutos</td>
+            <td class="good">&lt; 1.5 minutos</td>
+          </tr>
+          <tr>
+            <td>Conflictos de horario</td>
+            <td class="bad">12 - 15 incidencias/mes</td>
+            <td class="good">0 incidencias</td>
+          </tr>
+          <tr>
+            <td>Ocupación de salones</td>
+            <td class="bad">55%</td>
+            <td class="good">88%</td>
+          </tr>
+          <tr>
+            <td>Satisfacción de docentes y alumnos</td>
+            <td class="bad">42%</td>
+            <td class="good">94%</td>
+          </tr>
+        </table>
+      </div>
+      <h2 class="rv" style="margin-top: 36px">Conclusiones y próximos pasos</h2>
+      <div class="grid" style="margin-top: 14px">
+        <div class="card rv">
+          <h3>✅ Objetivos cumplidos</h3>
+          <p>Se erradicaron los solapamientos y la duplicidad en el uso de recursos.</p>
+        </div>
+        <div class="card rv">
+          <h3>⚡ Eficiencia</h3>
+          <p>
+            La ocupación de laboratorios aumentó un 33% y el tiempo de reserva bajó radicalmente.
+          </p>
+        </div>
+        <div class="card rv">
+          <h3>🔎 Control institucional</h3>
+          <p>Trazabilidad confiable para dar mantenimiento según datos reales de uso.</p>
+        </div>
+        <div class="card rv">
+          <h3>🚀 Trabajo futuro</h3>
+          <p>Autenticación OAuth2/SSO institucional y cerraduras electrónicas con código QR.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="equipo">
+      <h2 class="rv">Equipo de desarrollo</h2>
+      <p class="sub rv">
+        Docente: Edelmira Liduvina Ponce Duran · Sección 1° Desarrollo de Software “B”
+      </p>
+      <div class="wrap rv">
+        <table>
+          <tr>
+            <th>Nombres</th>
+            <th>Apellidos</th>
+            <th>NIE</th>
+            <th>N° lista</th>
+          </tr>
+          <tr>
+            <td>Sachiel Yerik</td>
+            <td>Meléndez Membreño</td>
+            <td>19896543</td>
+            <td>#29</td>
+          </tr>
+          <tr>
+            <td>Etan Ariel</td>
+            <td>Rodríguez Perez</td>
+            <td>4960149</td>
+            <td>#37</td>
+          </tr>
+          <tr>
+            <td>Anthony David</td>
+            <td>Flores Díaz</td>
+            <td>4960148</td>
+            <td>#12</td>
+          </tr>
+          <tr>
+            <td>Jason Geovany</td>
+            <td>Sura López</td>
+            <td>20161709</td>
+            <td>#38</td>
+          </tr>
+          <tr>
+            <td>Cristhopher Gustavo</td>
+            <td>Mejía Martinez</td>
+            <td>19854867</td>
+            <td>#28</td>
+          </tr>
+          <tr>
+            <td>Guillermo Steven</td>
+            <td>Rauda Bonillas</td>
+            <td>19956315</td>
+            <td>#34</td>
+          </tr>
+        </table>
+      </div>
+    </section>
+    <footer>
+      <img class="foot-logo" src="../images/logo.jpeg" alt="" onerror="this.style.display='none'" />
+      PCReserve · Instituto Nacional San Luis · Módulo 1.8 Proyecto tecnológico</footer>
+
+    <div class="modal" id="modal">
+      <div class="box">
+        <div style="display: flex; justify-content: space-between; gap: 10px">
+          <div>
+            <h3 id="mTitle"></h3>
+            <div class="loc" id="mLoc"></div>
+          </div>
+          <span style="font-size: 2.4rem" id="mIco"></span>
+        </div>
+        <label>Fecha</label><input type="date" id="mDate" />
+        <label>Elige tu bloque horario (clic en inicio y luego en fin)</label>
+        <div class="slots" id="slots"></div>
+        <div class="legend">
+          <span style="--c: var(--lib)">Libre</span><span style="--c: var(--ocu)">Ocupado</span
+          ><span style="--c: var(--ac)">Tu selección</span>
+        </div>
+        <div class="msg" id="mMsg"></div>
+        <div style="display: flex; gap: 8px; margin-top: 8px">
+          <button id="mGo" style="flex: 1" disabled>Confirmar reserva</button
+          ><button class="ghost" id="mX">Cerrar</button>
+        </div>
+      </div>
+    </div>
+    <div id="toast"></div>
+
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+    <script src="../js/config.js"></script>
+    <script src="../js/common.js"></script>
+    <script src="../js/proyecto.js"></script>
+  </body>
+</html>
